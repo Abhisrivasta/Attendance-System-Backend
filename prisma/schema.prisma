@@ -25,108 +25,127 @@ enum Gender {
 
 model User {
   // 🔑 PRIMARY KEY: Supabase UUID (String)
-  id        String       @id @db.Uuid 
-  email     String       @unique
-  password  String?
+  id       String  @id @db.Uuid
+  email    String  @unique
+  password String?
 
-  name      String
-  role      UserRole     @default(STUDENT)
-  gender    Gender?
-  phone     String?
-  
+  name   String
+  role   UserRole @default(STUDENT)
+  gender Gender?
+  phone  String?
+
   // Relations to Role-Specific Profiles (One-to-One)
-  student   StudentProfile?
-  teacher   TeacherProfile?
+  student StudentProfile?
+  teacher TeacherProfile?
 
   // Standard Fields
-  isActive  Boolean      @default(true)
-  isDeleted Boolean      @default(false)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-
 model StudentProfile {
-  id               Int            @id @default(autoincrement())
-  
+  id Int @id @default(autoincrement())
+
   // Foreign Key to the User (String UUID)
-  userId           String         @unique @db.Uuid // Must be UUID type to reference User.id
-  user             User           @relation(fields: [userId], references: [id])
+  userId String @unique @db.Uuid // Must be UUID type to reference User.id
+  user   User   @relation(fields: [userId], references: [id])
 
-  rollNo           String         @unique
-  registrationNo   String?
-  batchId          Int
-  batch            Batch          @relation(fields: [batchId], references: [id])
-  courseId         Int
-  course           Course         @relation(fields: [courseId], references: [id])
-  collegeId        Int
-  college          College        @relation(fields: [collegeId], references: [id])
+  rollNo         String  @unique
+  registrationNo String?
+  batchId        Int
+  batch          Batch   @relation(fields: [batchId], references: [id])
+  courseId       Int
+  course         Course  @relation(fields: [courseId], references: [id])
+  collegeId      Int
+  college        College @relation(fields: [collegeId], references: [id])
 
-  guardianName     String?
-  guardianPhone    String?
+  guardianName  String?
+  guardianPhone String?
 
-  attendance       Attendance[] // References this profile's Int ID (StudentProfile.id)
+  attendance Attendance[] // References this profile's Int ID (StudentProfile.id)
 
-  isActive         Boolean        @default(true)
-  isDeleted        Boolean        @default(false)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TeacherProfile {
   // Internal Primary Key (Int)
-  id               Int            @id @default(autoincrement())
-  
+  id Int @id @default(autoincrement())
+
   // Foreign Key to the User (String UUID)
-  userId           String         @unique @db.Uuid // Must be UUID type to reference User.id
-  user             User           @relation(fields: [userId], references: [id])
+  userId String @unique @db.Uuid // Must be UUID type to reference User.id
+  user   User   @relation(fields: [userId], references: [id])
 
   // Employment Fields
-  employeeId       String         @unique
-  specialization   String?
-  joiningDate      DateTime?
-  collegeId        Int?
-  college          College?       @relation(fields: [collegeId], references: [id])
+  employeeId     String    @unique
+  specialization String?
+  joiningDate    DateTime?
+  collegeId      Int?
+  college        College?  @relation(fields: [collegeId], references: [id])
 
-  subjectLinks     TeacherSubject[] // References this profile's Int ID (TeacherProfile.id)
+  subjectLinks TeacherSubject[] // References this profile's Int ID (TeacherProfile.id)
 
-  isActive         Boolean        @default(true)
-  isDeleted        Boolean        @default(false)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model University {
-  id        Int        @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  code      String     @unique
+  code      String    @unique
   colleges  College[]
-  isActive  Boolean    @default(true)
-  isDeleted Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  isActive  Boolean   @default(true)
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model College {
   id              Int              @id @default(autoincrement())
   name            String
   code            String?          @unique
+  type            CollegeType?
+  address         String?
+  city            String?
+  state           String?
+  country         String?
+  postalCode      String?
+  latitude        Float?
+  longitude       Float?
+  email           String?
+  phone           String?
+  establishedYear Int?
+  
   universityId    Int
   university      University       @relation(fields: [universityId], references: [id])
-  batches         Batch[]
+  courses         Course[]
   studentProfiles StudentProfile[]
   teacherProfiles TeacherProfile[]
+
   isActive        Boolean          @default(true)
   isDeleted       Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 }
 
+enum CollegeType {
+  GOVERNMENT
+  PRIVATE
+  AUTONOMOUS
+}
+
 model Course {
   id        Int              @id @default(autoincrement())
   name      String
   code      String?          @unique
+  collegeId Int
+  college   College          @relation(fields: [collegeId], references: [id])
   batches   Batch[]
   subjects  Subject[]
   students  StudentProfile[]
@@ -137,58 +156,55 @@ model Course {
 }
 
 model Batch {
-  id          Int              @id @default(autoincrement())
-  name        String
-  startYear   DateTime
-  endYear     DateTime
-  collegeId   Int
-  college     College          @relation(fields: [collegeId], references: [id])
-  courseId    Int
-  course      Course           @relation(fields: [courseId], references: [id])
-  students    StudentProfile[]
-  isActive    Boolean          @default(true)
-  isDeleted   Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id        Int              @id @default(autoincrement())
+  name      String
+  startYear DateTime
+  endYear   DateTime
+  courseId  Int
+  course    Course           @relation(fields: [courseId], references: [id])
+  students  StudentProfile[]
+  isActive  Boolean          @default(true)
+  isDeleted Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }
 
+
 model Subject {
-  id             Int              @id @default(autoincrement())
-  name           String
-  code           String?          @unique
-  courseId       Int
-  course         Course           @relation(fields: [courseId], references: [id])
-  teacherLinks   TeacherSubject[]
-  attendance     Attendance[]
-  isActive       Boolean          @default(true)
-  isDeleted      Boolean          @default(false)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id           Int              @id @default(autoincrement())
+  name         String
+  code         String?          @unique
+  courseId     Int
+  course       Course           @relation(fields: [courseId], references: [id])
+  teacherLinks TeacherSubject[]
+  attendance   Attendance[]
+  isActive     Boolean          @default(true)
+  isDeleted    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }
 
 model TeacherSubject {
-  // Foreign keys point to the *Internal INT ID* of the TeacherProfile
-  teacherId  Int
-  subjectId  Int
-  teacher    TeacherProfile @relation(fields: [teacherId], references: [id]) // references TeacherProfile.id (Int)
-  subject    Subject        @relation(fields: [subjectId], references: [id])
+  teacherId Int
+  subjectId Int
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id]) 
+  subject   Subject        @relation(fields: [subjectId], references: [id])
+
   @@id([teacherId, subjectId])
 }
 
 model Attendance {
-  id          Int            @id @default(autoincrement())
-  date        DateTime       @default(now())
-  status      Boolean
-  
-  // Foreign keys point to the *Internal INT ID* of the StudentProfile
-  studentId   Int
-  subjectId   Int
-  
-  student     StudentProfile @relation(fields: [studentId], references: [id]) // references StudentProfile.id (Int)
-  subject     Subject        @relation(fields: [subjectId], references: [id])
-  
-  isActive    Boolean        @default(true)
-  isDeleted   Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id     Int      @id @default(autoincrement())
+  date   DateTime @default(now())
+  status Boolean
+  studentId Int
+  subjectId Int
+
+  student StudentProfile @relation(fields: [studentId], references: [id]) 
+  subject Subject        @relation(fields: [subjectId], references: [id])
+
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
